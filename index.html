@@ -95,8 +95,14 @@
             0x00,
 
             // Footer
+            ESC,
+            0x61,
+            0x01, // Center align
             ...encoder.encode("\nThank you!\n"),
-            ...encoder.encode("www.microblade.sys\n\n"),
+            ...encoder.encode("www.microblade.sys\n"),
+            ...encoder.encode("Designed & Developed by\n"),
+            ...encoder.encode("Nile Valley Lab\n"),
+            ...encoder.encode("0702322095\n\n"),
 
             // Cut paper
             GS,
