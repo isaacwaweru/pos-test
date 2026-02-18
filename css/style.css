@@ -1,0 +1,14 @@
+body {
+  font-family: system-ui, sans-serif;
+  padding: 20px;
+}
+button {
+  padding: 10px 16px;
+  font-size: 16px;
+  cursor: pointer;
+}
+pre {
+  background: #f4f4f4;
+  padding: 10px;
+  margin-top: 15px;
+}

@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>USB Thermal Printer Test</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <h2>🖨️ USB Thermal Printer Test</h2>
+    <button id="print">Connect & Print</button>
+
+    <pre id="log"></pre>
+
+    <script>
+      const log = (msg) => {
+        document.getElementById("log").textContent += msg + "\n";
+      };
+
+      document.getElementById("print").onclick = async () => {
+        try {
+          log("Requesting USB device...");
+
+          const device = await navigator.usb.requestDevice({
+            filters: [], // allow user to pick printer
+          });
+
+          log(`Selected device: ${device.productName}`);
+
+          await device.open();
+
+          if (device.configuration === null) {
+            await device.selectConfiguration(1);
+          }
+
+          await device.claimInterface(0);
+          log("Interface claimed");
+
+          // ESC/POS print data
+          const encoder = new TextEncoder();
+          const data = new Uint8Array([
+            0x1b,
+            0x40, // Initialize printer
+            ...encoder.encode("HELLO USB PRINTER\n"),
+            ...encoder.encode("WebUSB test successful\n\n"),
+            0x1d,
+            0x56,
+            0x41,
+            0x10, // Cut paper
+          ]);
+
+          // Endpoint is usually 1 (OUT)
+          await device.transferOut(1, data);
+
+          log("✅ Print data sent");
+
+          await device.close();
+        } catch (err) {
+          console.error(err);
+          log("❌ ERROR: " + err.message);
+        }
+      };
+    </script>
+  </body>
+</html>
