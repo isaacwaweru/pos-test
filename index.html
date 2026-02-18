@@ -35,186 +35,100 @@
           await device.claimInterface(0);
           log("Interface claimed");
 
-          // ESC/POS modern receipt design
+          // ESC/POS Modern Receipt Design
           const encoder = new TextEncoder();
 
           const ESC = 0x1b;
           const GS = 0x1d;
 
-          // Predefined strings for clean column alignment (42 columns)
-          const headerLine = "==========================================";
-          const thinLine = "------------------------------------------";
-
-          // Build the receipt data
           const data = new Uint8Array([
-            // Initialize printer
+            // Init
             ESC,
             0x40,
 
-            // ========== HEADER ==========
-            // Store name: double width/height + bold + underline
+            // ================= HEADER =================
             ESC,
             0x61,
-            0x01, // Center align
+            0x01, // Center
             ESC,
             0x45,
             0x01, // Bold ON
             GS,
             0x21,
-            0x11, // Double width & height
-            ESC,
-            0x2d,
-            0x01, // Underline ON (single)
-            ...encoder.encode("MICROBLADE SYS\n"),
-            ESC,
-            0x2d,
-            0x00, // Underline OFF
+            0x22, // Quad size
+            ...encoder.encode("MICROBLADE\n"),
             GS,
             0x21,
-            0x00, // Normal size
+            0x00,
             ESC,
             0x45,
-            0x00, // Bold OFF
+            0x00,
+            ...encoder.encode("Electronics Store\n"),
+            ...encoder.encode("───────────────\n\n"),
 
-            // Address and contact (normal, center)
-            ...encoder.encode("123 Tech Street, Silicon Valley\n"),
-            ...encoder.encode("Tel: +1 (702) 322-095\n"),
-
-            // Receipt metadata (left align)
+            // ================= META =================
             ESC,
             0x61,
-            0x00, // Left align
-            ...encoder.encode(
-              "Receipt #: 12345          Date: 2025-02-18 14:30\n",
-            ),
+            0x00, // Left
+            ...encoder.encode("Invoice #: 000124\n"),
+            ...encoder.encode("Date     : 2026-02-19\n"),
+            ...encoder.encode("Cashier  : Admin\n"),
+            ...encoder.encode("────────────────────────────\n"),
 
-            // Separator
-            ...encoder.encode(headerLine + "\n"),
-
-            // ========== ITEMS TABLE ==========
-            // Table header (bold)
+            // ================= ITEMS HEADER =================
             ESC,
             0x45,
             0x01,
-            ...encoder.encode(
-              "Item                          Qty   Price    Total\n",
-            ),
+            ...encoder.encode("ITEM            QTY   PRICE\n"),
             ESC,
             0x45,
             0x00,
-            ...encoder.encode(thinLine + "\n"),
+            ...encoder.encode("────────────────────────────\n"),
 
-            // Items (carefully spaced for 42 columns)
-            ...encoder.encode(
-              "USB-C Cable                   1    8.00     8.00\n",
-            ),
-            ...encoder.encode(
-              "Wireless Mouse                 1   15.50    15.50\n",
-            ),
-            ...encoder.encode(
-              "Mechanical Keyboard            1   45.00    45.00\n",
-            ),
-            ...encoder.encode(
-              "Power Bank 20k                  1   32.00    32.00\n",
-            ),
-            ...encoder.encode(
-              "HDMI Adapter                    1    6.50     6.50\n",
-            ),
+            // ================= ITEMS =================
+            ...encoder.encode("USB-C Cable        1     8.00\n"),
+            ...encoder.encode("Wireless Mouse    1    15.50\n"),
+            ...encoder.encode("Mechanical KB     1    45.00\n"),
+            ...encoder.encode("Power Bank 20k    1    32.00\n"),
+            ...encoder.encode("HDMI Adapter      1     6.50\n"),
 
-            ...encoder.encode(thinLine + "\n"),
+            ...encoder.encode("────────────────────────────\n"),
 
-            // Totals (bold, right‑aligned via spaces)
+            // ================= TOTALS =================
+            ...encoder.encode("Subtotal               107.00\n"),
+            ...encoder.encode("VAT (15%)               16.05\n"),
+
             ESC,
             0x45,
             0x01,
-            ...encoder.encode("Subtotal                             107.00\n"),
-            ...encoder.encode("VAT (15%)                              16.05\n"),
-            ...encoder.encode(thinLine + "\n"),
-            ...encoder.encode("TOTAL                                123.05\n"),
+            ...encoder.encode("────────────────────────────\n"),
+            ...encoder.encode("TOTAL                  123.05\n"),
             ESC,
             0x45,
             0x00,
 
-            // Payment method
-            ...encoder.encode("\nPayment: Cash\n"),
-            ...encoder.encode("Change: 0.00\n\n"),
-
-            // ========== FOOTER ==========
-            // Thank you message with stars (center)
+            // ================= FOOTER =================
             ESC,
             0x61,
             0x01,
-            ...encoder.encode("✨  THANK YOU FOR SHOPPING  ✨\n"),
-            ...encoder.encode("     with MICROBLADE SYS     \n\n"),
-
-            // QR Code (center, encodes website URL)
-            // Note: Printer must support QR code printing (Epson/Star compatible)
-            // Set QR model (model 2)
-            GS,
-            0x28,
-            0x6b,
-            0x04,
-            0x00,
-            0x31,
-            0x41,
-            0x32,
-            0x00,
-            // Set module size (4 dots)
-            GS,
-            0x28,
-            0x6b,
-            0x03,
-            0x00,
-            0x31,
-            0x43,
-            0x04,
-            // Set error correction (level M)
-            GS,
-            0x28,
-            0x6b,
-            0x03,
-            0x00,
-            0x31,
-            0x45,
-            0x31,
-            // Store data: "https://nilevalleylab.com" (length 24)
-            // pL = 27 (24+3), pH = 0
-            GS,
-            0x28,
-            0x6b,
-            0x1b,
-            0x00,
-            0x31,
-            0x50,
-            0x30,
-            ...encoder.encode("https://nilevalleylab.com"),
-            // Print QR code
-            GS,
-            0x28,
-            0x6b,
-            0x03,
-            0x00,
-            0x31,
-            0x51,
-            0x30,
-
-            // Spacer
-            ...encoder.encode("\n"),
-
-            // Contact & social (center)
-            ESC,
-            0x61,
-            0x01,
+            ...encoder.encode("\nThank you for your purchase!\n"),
+            ...encoder.encode("───────────────\n"),
             ...encoder.encode("www.nilevalleylab.com\n"),
-            ...encoder.encode("📱 @nilevalleylab\n"),
-            ...encoder.encode("📞 0702322095\n\n"),
+            ...encoder.encode("Designed & Developed by\n"),
+            ESC,
+            0x45,
+            0x01,
+            ...encoder.encode("Nile Valley Lab\n"),
+            ESC,
+            0x45,
+            0x00,
+            ...encoder.encode("0702 322 095\n\n"),
 
-            // ========== CUT ==========
-            // Partial cut (GS V m n) – m=1 for partial cut, n=0
+            // ================= CUT =================
             GS,
             0x56,
-            0x01,
-            0x00,
+            0x41,
+            0x10,
           ]);
 
           // // ESC/POS print data
