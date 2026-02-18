@@ -37,15 +37,72 @@
 
           // ESC/POS print data
           const encoder = new TextEncoder();
+
+          const ESC = 0x1b;
+          const GS = 0x1d;
+
           const data = new Uint8Array([
-            0x1b,
-            0x40, // Initialize printer
-            ...encoder.encode("HELLO USB PRINTER\n"),
-            ...encoder.encode("WebUSB test successful\n\n"),
-            0x1d,
+            // Initialize
+            ESC,
+            0x40,
+
+            // Center + Bold + Double size (logo)
+            ESC,
+            0x61,
+            0x01, // Center
+            ESC,
+            0x45,
+            0x01, // Bold ON
+            GS,
+            0x21,
+            0x11, // Double width + height
+            ...encoder.encode("MICROBLADE SYS\n"),
+
+            // Normal size
+            GS,
+            0x21,
+            0x00,
+            ESC,
+            0x45,
+            0x00, // Bold OFF
+            ...encoder.encode("Electronics Store\n\n"),
+
+            // Separator
+            ESC,
+            0x61,
+            0x00, // Left align
+            ...encoder.encode("--------------------------------\n"),
+
+            // Items
+            ...encoder.encode("USB-C Cable        8.00\n"),
+            ...encoder.encode("Wireless Mouse    15.50\n"),
+            ...encoder.encode("Mechanical KB     45.00\n"),
+            ...encoder.encode("Power Bank 20k    32.00\n"),
+            ...encoder.encode("HDMI Adapter       6.50\n"),
+
+            ...encoder.encode("--------------------------------\n"),
+
+            // Totals (bold)
+            ESC,
+            0x45,
+            0x01,
+            ...encoder.encode("Subtotal         107.00\n"),
+            ...encoder.encode("VAT (15%)         16.05\n"),
+            ...encoder.encode("--------------------------------\n"),
+            ...encoder.encode("TOTAL            123.05\n"),
+            ESC,
+            0x45,
+            0x00,
+
+            // Footer
+            ...encoder.encode("\nThank you!\n"),
+            ...encoder.encode("www.microblade.sys\n\n"),
+
+            // Cut paper
+            GS,
             0x56,
             0x41,
-            0x10, // Cut paper
+            0x10,
           ]);
 
           // Endpoint is usually 1 (OUT)
